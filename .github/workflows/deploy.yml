@@ -91,6 +91,7 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
@@ -100,7 +101,6 @@ jobs:
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
             --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            --changelog-parameters="database_name=$SNOWFLAKE_DATABASE" \
             validate
 
   deploy-dev:
@@ -169,6 +169,7 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
@@ -178,7 +179,6 @@ jobs:
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
             --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            --changelog-parameters="database_name=$SNOWFLAKE_DATABASE" \
             update
 
       - name: verify table
@@ -253,6 +253,7 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
@@ -262,7 +263,6 @@ jobs:
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
             --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            --changelog-parameters="database_name=$SNOWFLAKE_DATABASE" \
             update
 
       - name: verify table
