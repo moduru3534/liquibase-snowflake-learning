@@ -1,0 +1,215 @@
+name: liquibase snowflake deployment
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'liquibase/**'
+      - '.github/workflows/deploy.yml'
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'liquibase/**'
+      - '.github/workflows/deploy.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: setup java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: setup liquibase
+        uses: liquibase/setup-liquibase@v3
+        with:
+          version: '4.31.1'
+
+      - name: validate changelog
+        run: liquibase --changelog-file=liquibase/changelog-root.xml validate
+
+  deploy-dev:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    environment: dev
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_USER: ${{ vars.SNOWFLAKE_USER }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: setup java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: configure snowflake oidc
+        uses: snowflakedb/snowflake-actions@v3.0.0
+        with:
+          use-oidc: true
+          cli-version: '3.16'
+
+      - name: test snowflake connection
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        run: snow connection test -x
+
+      - name: setup liquibase
+        uses: liquibase/setup-liquibase@v3
+        with:
+          version: '4.31.1'
+
+      - name: download snowflake jdbc driver
+        run: |
+          curl --fail --silent --show-error --location \
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.0.0/snowflake-jdbc-4.0.0.jar
+
+      - name: build ci properties
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlencode
+
+          params = {
+              "db": os.environ["SNOWFLAKE_DATABASE"],
+              "schema": "trading_use_case",
+              "warehouse": os.environ["SNOWFLAKE_WAREHOUSE"],
+              "role": os.environ["SNOWFLAKE_ROLE"],
+              "user": os.environ["SNOWFLAKE_USER"],
+              "authenticator": "WORKLOAD_IDENTITY",
+              "workloadIdentityProvider": "OIDC",
+              "token": os.environ["SNOWFLAKE_TOKEN"],
+          }
+          url = "jdbc:snowflake://" + os.environ["SNOWFLAKE_ACCOUNT"] + ".snowflakecomputing.com/?" + urlencode(params)
+          with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
+              properties.write("changelogFile=liquibase/changelog-root.xml\n")
+              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("liquibaseSchemaName=trading_use_case\n")
+              properties.write("url=" + url + "\n")
+          PY
+
+      - name: deploy liquibase changes
+        run: |
+          liquibase \
+            --defaults-file=liquibase/liquibase.ci.properties \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
+            --changelog-parameters.database_name="$SNOWFLAKE_DATABASE" \
+            update
+
+      - name: verify table
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        run: |
+          snow sql -x -q "select count(*) as column_count from ${SNOWFLAKE_DATABASE}.information_schema.columns where table_schema = 'TRADING_USE_CASE' and table_name = 'EMPLOYEE_INFORMATION_BRONZE'"
+
+  deploy-prod:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    environment: prod
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_USER: ${{ vars.SNOWFLAKE_USER }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: setup java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: configure snowflake oidc
+        uses: snowflakedb/snowflake-actions@v3.0.0
+        with:
+          use-oidc: true
+          cli-version: '3.16'
+
+      - name: test snowflake connection
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        run: snow connection test -x
+
+      - name: setup liquibase
+        uses: liquibase/setup-liquibase@v3
+        with:
+          version: '4.31.1'
+
+      - name: download snowflake jdbc driver
+        run: |
+          curl --fail --silent --show-error --location \
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.0.0/snowflake-jdbc-4.0.0.jar
+
+      - name: build ci properties
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlencode
+
+          params = {
+              "db": os.environ["SNOWFLAKE_DATABASE"],
+              "schema": "trading_use_case",
+              "warehouse": os.environ["SNOWFLAKE_WAREHOUSE"],
+              "role": os.environ["SNOWFLAKE_ROLE"],
+              "user": os.environ["SNOWFLAKE_USER"],
+              "authenticator": "WORKLOAD_IDENTITY",
+              "workloadIdentityProvider": "OIDC",
+              "token": os.environ["SNOWFLAKE_TOKEN"],
+          }
+          url = "jdbc:snowflake://" + os.environ["SNOWFLAKE_ACCOUNT"] + ".snowflakecomputing.com/?" + urlencode(params)
+          with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
+              properties.write("changelogFile=liquibase/changelog-root.xml\n")
+              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("liquibaseSchemaName=trading_use_case\n")
+              properties.write("url=" + url + "\n")
+          PY
+
+      - name: deploy liquibase changes
+        run: |
+          liquibase \
+            --defaults-file=liquibase/liquibase.ci.properties \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
+            --changelog-parameters.database_name="$SNOWFLAKE_DATABASE" \
+            update
+
+      - name: verify table
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        run: |
+          snow sql -x -q "select count(*) as column_count from ${SNOWFLAKE_DATABASE}.information_schema.columns where table_schema = 'TRADING_USE_CASE' and table_name = 'EMPLOYEE_INFORMATION_BRONZE'"

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="initial_employee_information_bronze_table" author="madhan">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists schemaName="trading_use_case" tableName="employee_information_bronze"/>
+            </not>
+        </preConditions>
+
+        <sqlFile
+            path="sql/employee_information_bronze.sql"
+            relativeToChangelogFile="true"
+            splitStatements="false"
+            stripComments="false"/>
+
+        <rollback>
+            <sql>drop table if exists ${database_name}.trading_use_case.employee_information_bronze;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

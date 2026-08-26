@@ -1,0 +1,10 @@
+# Copy this file to liquibase.properties for local use.
+# Do not commit liquibase.properties if it contains local credentials.
+
+changelogFile=changelog-root.xml
+driver=net.snowflake.client.jdbc.SnowflakeDriver
+liquibaseSchemaName=trading_use_case
+
+# Replace the placeholders. Change database_name to the environment you want to test.
+database_name=SNOWFLAKE_LEARNING_DB_DEV
+url=jdbc:snowflake://<account_identifier>.snowflakecomputing.com/?db=SNOWFLAKE_LEARNING_DB_DEV&schema=trading_use_case&warehouse=SNOWFLAKE_LEARNING_WH&role=TRADING_DEV_CICD_ROLE&authenticator=externalbrowser
