@@ -65,12 +65,12 @@ jobs:
       - name: prepare supported snowflake jdbc driver
         run: |
           liquibase_path="$(readlink -f "$(command -v liquibase)")"
-          liquibase_home="$(dirname "$liquibase_path")"
-          if [ ! -d "$liquibase_home/internal/lib" ]; then
-            liquibase_home="$(dirname "$liquibase_home")"
-          fi
-          test -d "$liquibase_home/internal/lib"
-          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
+          liquibase_dir="$(dirname "$liquibase_path")"
+          for lib_dir in "$liquibase_dir/internal/lib" "$liquibase_dir/lib" "$liquibase_dir/../internal/lib" "$liquibase_dir/../lib"; do
+            if [ -d "$lib_dir" ]; then
+              find "$lib_dir" -type f -name 'snowflake-jdbc*.jar' -delete
+            fi
+          done
           curl --fail --silent --show-error --location \
             --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
@@ -98,7 +98,6 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
-              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
@@ -150,12 +149,12 @@ jobs:
       - name: prepare supported snowflake jdbc driver
         run: |
           liquibase_path="$(readlink -f "$(command -v liquibase)")"
-          liquibase_home="$(dirname "$liquibase_path")"
-          if [ ! -d "$liquibase_home/internal/lib" ]; then
-            liquibase_home="$(dirname "$liquibase_home")"
-          fi
-          test -d "$liquibase_home/internal/lib"
-          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
+          liquibase_dir="$(dirname "$liquibase_path")"
+          for lib_dir in "$liquibase_dir/internal/lib" "$liquibase_dir/lib" "$liquibase_dir/../internal/lib" "$liquibase_dir/../lib"; do
+            if [ -d "$lib_dir" ]; then
+              find "$lib_dir" -type f -name 'snowflake-jdbc*.jar' -delete
+            fi
+          done
           curl --fail --silent --show-error --location \
             --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
@@ -183,7 +182,6 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
-              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
@@ -241,12 +239,12 @@ jobs:
       - name: prepare supported snowflake jdbc driver
         run: |
           liquibase_path="$(readlink -f "$(command -v liquibase)")"
-          liquibase_home="$(dirname "$liquibase_path")"
-          if [ ! -d "$liquibase_home/internal/lib" ]; then
-            liquibase_home="$(dirname "$liquibase_home")"
-          fi
-          test -d "$liquibase_home/internal/lib"
-          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
+          liquibase_dir="$(dirname "$liquibase_path")"
+          for lib_dir in "$liquibase_dir/internal/lib" "$liquibase_dir/lib" "$liquibase_dir/../internal/lib" "$liquibase_dir/../lib"; do
+            if [ -d "$lib_dir" ]; then
+              find "$lib_dir" -type f -name 'snowflake-jdbc*.jar' -delete
+            fi
+          done
           curl --fail --silent --show-error --location \
             --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
@@ -274,7 +272,6 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
-              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
