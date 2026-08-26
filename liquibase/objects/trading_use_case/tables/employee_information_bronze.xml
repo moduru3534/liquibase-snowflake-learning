@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="initial_employee_information_bronze_table" author="madhan">
+        <sql splitStatements="false" stripComments="false"><![CDATA[
+create table if not exists trading_use_case.employee_information_bronze (
+    day_id number(38,0),
+    emp_id number(38,0),
+    emp_email varchar(16777216),
+    emp_name varchar(16777216),
+    emp_salary number(38,0),
+    dept_id number(38,0),
+    dept_name varchar(16777216),
+    dept_code varchar(16777216),
+    creation_dt timestamp_ltz(9) default current_timestamp()
+);
+        ]]></sql>
+
+        <rollback>
+            <sql splitStatements="false"><![CDATA[
+drop table if exists trading_use_case.employee_information_bronze;
+            ]]></sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
