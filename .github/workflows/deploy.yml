@@ -27,7 +27,12 @@ permissions:
 jobs:
   validate:
     if: ${{ github.event_name == 'pull_request' }}
+    environment: dev
     runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_DATABASE: ${{ vars.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_USER: ${{ vars.SNOWFLAKE_USER }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -40,13 +45,70 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: configure snowflake oidc
+        uses: snowflakedb/snowflake-actions@v3.0.0
+        with:
+          use-oidc: true
+          cli-version: '3.16'
+
+      - name: test snowflake connection
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+        run: snow connection test -x
+
       - name: setup liquibase
         uses: liquibase/setup-liquibase@v3
         with:
-          version: '4.31.1'
+          edition: community
+          version: '4.33.0'
+
+      - name: prepare supported snowflake jdbc driver
+        run: |
+          liquibase_path="$(readlink -f "$(command -v liquibase)")"
+          liquibase_home="$(dirname "$liquibase_path")"
+          if [ ! -d "$liquibase_home/internal/lib" ]; then
+            liquibase_home="$(dirname "$liquibase_home")"
+          fi
+          test -d "$liquibase_home/internal/lib"
+          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
+          curl --fail --silent --show-error --location \
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
+
+      - name: build ci properties
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ vars.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_WAREHOUSE: ${{ vars.SNOWFLAKE_WAREHOUSE }}
+        run: |
+          python - <<'PY'
+          import os
+          from urllib.parse import urlencode
+
+          params = {
+              "db": os.environ["SNOWFLAKE_DATABASE"],
+              "schema": "trading_use_case",
+              "warehouse": os.environ["SNOWFLAKE_WAREHOUSE"],
+              "role": os.environ["SNOWFLAKE_ROLE"],
+              "user": os.environ["SNOWFLAKE_USER"],
+              "authenticator": "WORKLOAD_IDENTITY",
+              "workloadIdentityProvider": "OIDC",
+              "token": os.environ["SNOWFLAKE_TOKEN"],
+          }
+          url = "jdbc:snowflake://" + os.environ["SNOWFLAKE_ACCOUNT"] + ".snowflakecomputing.com/?" + urlencode(params)
+          with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
+              properties.write("changelogFile=liquibase/changelog-root.xml\n")
+              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
+              properties.write("liquibaseSchemaName=trading_use_case\n")
+              properties.write("url=" + url + "\n")
+          PY
 
       - name: validate changelog
-        run: liquibase --changelog-file=liquibase/changelog-root.xml validate
+        run: |
+          liquibase \
+            --defaults-file=liquibase/liquibase.ci.properties \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
+            validate
 
   deploy-dev:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
@@ -82,13 +144,21 @@ jobs:
       - name: setup liquibase
         uses: liquibase/setup-liquibase@v3
         with:
-          version: '4.31.1'
+          edition: community
+          version: '4.33.0'
 
-      - name: download snowflake jdbc driver
+      - name: prepare supported snowflake jdbc driver
         run: |
+          liquibase_path="$(readlink -f "$(command -v liquibase)")"
+          liquibase_home="$(dirname "$liquibase_path")"
+          if [ ! -d "$liquibase_home/internal/lib" ]; then
+            liquibase_home="$(dirname "$liquibase_home")"
+          fi
+          test -d "$liquibase_home/internal/lib"
+          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
           curl --fail --silent --show-error --location \
-            --output "$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.0.0/snowflake-jdbc-4.0.0.jar
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
 
       - name: build ci properties
         env:
@@ -113,6 +183,7 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
@@ -121,8 +192,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
-            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            --changelog-parameters.database_name="$SNOWFLAKE_DATABASE" \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             update
 
       - name: verify table
@@ -165,13 +235,21 @@ jobs:
       - name: setup liquibase
         uses: liquibase/setup-liquibase@v3
         with:
-          version: '4.31.1'
+          edition: community
+          version: '4.33.0'
 
-      - name: download snowflake jdbc driver
+      - name: prepare supported snowflake jdbc driver
         run: |
+          liquibase_path="$(readlink -f "$(command -v liquibase)")"
+          liquibase_home="$(dirname "$liquibase_path")"
+          if [ ! -d "$liquibase_home/internal/lib" ]; then
+            liquibase_home="$(dirname "$liquibase_home")"
+          fi
+          test -d "$liquibase_home/internal/lib"
+          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
           curl --fail --silent --show-error --location \
-            --output "$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.0.0/snowflake-jdbc-4.0.0.jar
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
 
       - name: build ci properties
         env:
@@ -196,6 +274,7 @@ jobs:
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
@@ -204,8 +283,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
-            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            --changelog-parameters.database_name="$SNOWFLAKE_DATABASE" \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             update
 
       - name: verify table
