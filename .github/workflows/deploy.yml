@@ -62,11 +62,18 @@ jobs:
           edition: community
           version: '4.33.0'
 
-      - name: download snowflake jdbc driver
+      - name: prepare supported snowflake jdbc driver
         run: |
+          liquibase_path="$(readlink -f "$(command -v liquibase)")"
+          liquibase_home="$(dirname "$liquibase_path")"
+          if [ ! -d "$liquibase_home/internal/lib" ]; then
+            liquibase_home="$(dirname "$liquibase_home")"
+          fi
+          test -d "$liquibase_home/internal/lib"
+          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
           curl --fail --silent --show-error --location \
-            --output "$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.0.0/snowflake-jdbc-4.0.0.jar
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
 
       - name: build ci properties
         env:
@@ -100,7 +107,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
-            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             validate
 
   deploy-dev:
@@ -140,11 +147,18 @@ jobs:
           edition: community
           version: '4.33.0'
 
-      - name: download snowflake jdbc driver
+      - name: prepare supported snowflake jdbc driver
         run: |
+          liquibase_path="$(readlink -f "$(command -v liquibase)")"
+          liquibase_home="$(dirname "$liquibase_path")"
+          if [ ! -d "$liquibase_home/internal/lib" ]; then
+            liquibase_home="$(dirname "$liquibase_home")"
+          fi
+          test -d "$liquibase_home/internal/lib"
+          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
           curl --fail --silent --show-error --location \
-            --output "$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.0.0/snowflake-jdbc-4.0.0.jar
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
 
       - name: build ci properties
         env:
@@ -178,7 +192,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
-            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             update
 
       - name: verify table
@@ -224,11 +238,18 @@ jobs:
           edition: community
           version: '4.33.0'
 
-      - name: download snowflake jdbc driver
+      - name: prepare supported snowflake jdbc driver
         run: |
+          liquibase_path="$(readlink -f "$(command -v liquibase)")"
+          liquibase_home="$(dirname "$liquibase_path")"
+          if [ ! -d "$liquibase_home/internal/lib" ]; then
+            liquibase_home="$(dirname "$liquibase_home")"
+          fi
+          test -d "$liquibase_home/internal/lib"
+          rm -f "$liquibase_home/internal/lib/snowflake-jdbc.jar"
           curl --fail --silent --show-error --location \
-            --output "$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
-            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.0.0/snowflake-jdbc-4.0.0.jar
+            --output "$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
+            https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/4.3.2/snowflake-jdbc-4.3.2.jar
 
       - name: build ci properties
         env:
@@ -262,7 +283,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
-            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.0.0.jar" \
+            --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             update
 
       - name: verify table
