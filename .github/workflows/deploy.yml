@@ -44,7 +44,7 @@ jobs:
         uses: liquibase/setup-liquibase@v3
         with:
           edition: community
-          version: '4.32.1'
+          version: '4.33.0'
 
       - name: validate changelog
         run: liquibase --changelog-file=liquibase/changelog-root.xml validate
@@ -84,7 +84,7 @@ jobs:
         uses: liquibase/setup-liquibase@v3
         with:
           edition: community
-          version: '4.32.1'
+          version: '4.33.0'
 
       - name: download snowflake jdbc driver
         run: |
@@ -168,7 +168,7 @@ jobs:
         uses: liquibase/setup-liquibase@v3
         with:
           edition: community
-          version: '4.32.1'
+          version: '4.33.0'
 
       - name: download snowflake jdbc driver
         run: |
