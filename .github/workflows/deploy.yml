@@ -43,6 +43,7 @@ jobs:
       - name: setup liquibase
         uses: liquibase/setup-liquibase@v3
         with:
+          edition: community
           version: '4.31.1'
 
       - name: validate changelog
@@ -82,6 +83,7 @@ jobs:
       - name: setup liquibase
         uses: liquibase/setup-liquibase@v3
         with:
+          edition: community
           version: '4.31.1'
 
       - name: download snowflake jdbc driver
@@ -165,6 +167,7 @@ jobs:
       - name: setup liquibase
         uses: liquibase/setup-liquibase@v3
         with:
+          edition: community
           version: '4.31.1'
 
       - name: download snowflake jdbc driver
