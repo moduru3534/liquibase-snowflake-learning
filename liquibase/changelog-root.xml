@@ -9,7 +9,7 @@
         relativeToChangelogFile="true"/>
 
     <include
-        file="objects/trading_use_case/tables/002-change-emp-email-to-varchar-255.xml"
+        file="objects/trading_use_case/tables/002-add-updated-by.xml"
         relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
