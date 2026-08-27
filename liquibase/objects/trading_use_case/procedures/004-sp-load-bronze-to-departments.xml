@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="004-create-sp-load-bronze-to-departments" author="madhan">
+        <preConditions onFail="HALT" onError="HALT">
+            <tableExists
+                schemaName="trading_use_case"
+                tableName="employee_information_bronze"/>
+            <tableExists
+                schemaName="trading_use_case"
+                tableName="departments_silver"/>
+        </preConditions>
+
+        <sql splitStatements="false" stripComments="false"><![CDATA[
+create or replace procedure trading_use_case.sp_load_bronze_to_departments()
+returns varchar
+language sql
+execute as caller
+as
+$$
+begin
+
+    merge into trading_use_case.departments_silver as tgt
+    using
+    (
+        select distinct
+            dept_id,
+            dept_name,
+            dept_code
+        from trading_use_case.employee_information_bronze
+    ) as src
+    on tgt.dept_id = src.dept_id
+
+    when matched then update set
+        tgt.dept_name = src.dept_name,
+        tgt.dept_code = src.dept_code
+
+    when not matched then insert
+    (
+        dept_id,
+        dept_name,
+        dept_code
+    )
+    values
+    (
+        src.dept_id,
+        src.dept_name,
+        src.dept_code
+    );
+
+    return 'departments silver loaded successfully';
+
+end;
+$$;
+        ]]></sql>
+
+        <rollback>
+            <sql splitStatements="false" stripComments="false"><![CDATA[
+drop procedure if exists trading_use_case.sp_load_bronze_to_departments();
+            ]]></sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

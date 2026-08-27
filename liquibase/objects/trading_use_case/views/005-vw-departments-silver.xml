@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="005-create-vw-departments-silver" author="madhan">
+        <preConditions onFail="HALT" onError="HALT">
+            <tableExists
+                schemaName="trading_use_case"
+                tableName="departments_silver"/>
+        </preConditions>
+
+        <sql splitStatements="false" stripComments="false"><![CDATA[
+create or replace view trading_use_case.vw_departments_silver as
+select
+    dept_id,
+    dept_name,
+    dept_code
+from trading_use_case.departments_silver;
+        ]]></sql>
+
+        <rollback>
+            <sql splitStatements="false" stripComments="false"><![CDATA[
+drop view if exists trading_use_case.vw_departments_silver;
+            ]]></sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
