@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="003-add-updated-by" author="madhan">
+        <preConditions onFail="HALT" onError="HALT">
+            <tableExists
+                schemaName="trading_use_case"
+                tableName="employee_information_bronze"/>
+        </preConditions>
+
+        <sql splitStatements="true" stripComments="false"><![CDATA[
+alter table trading_use_case.employee_information_bronze
+    add column if not exists updated_by varchar(255);
+
+update trading_use_case.employee_information_bronze
+set updated_by = current_user()
+where updated_by is null;
+        ]]></sql>
+
+        <rollback>
+            <sql splitStatements="false" stripComments="false"><![CDATA[
+alter table trading_use_case.employee_information_bronze
+    drop column if exists updated_by;
+            ]]></sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
