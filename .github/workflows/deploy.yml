@@ -82,10 +82,26 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          import shutil
+          from pathlib import Path
           from urllib.parse import urlencode
 
+          source_dir = Path("liquibase")
+          expanded_dir = Path(os.environ["RUNNER_TEMP"]) / "liquibase-expanded"
+          shutil.rmtree(expanded_dir, ignore_errors=True)
+          shutil.copytree(source_dir, expanded_dir)
+
+          database_name = os.environ["SNOWFLAKE_DATABASE"]
+          for path in expanded_dir.rglob("*"):
+              if path.is_file() and path.suffix.lower() in {".xml", ".sql", ".properties"}:
+                  content = path.read_text(encoding="utf-8")
+                  path.write_text(
+                      content.replace("${database_name}", database_name),
+                      encoding="utf-8"
+                  )
+
           params = {
-              "db": os.environ["SNOWFLAKE_DATABASE"],
+              "db": database_name,
               "schema": "trading_use_case",
               "warehouse": os.environ["SNOWFLAKE_WAREHOUSE"],
               "role": os.environ["SNOWFLAKE_ROLE"],
@@ -94,19 +110,23 @@ jobs:
               "workloadIdentityProvider": "OIDC",
               "token": os.environ["SNOWFLAKE_TOKEN"],
           }
-          url = "jdbc:snowflake://" + os.environ["SNOWFLAKE_ACCOUNT"] + ".snowflakecomputing.com/?" + urlencode(params)
+          url = (
+              "jdbc:snowflake://"
+              + os.environ["SNOWFLAKE_ACCOUNT"]
+              + ".snowflakecomputing.com/?"
+              + urlencode(params)
+          )
+
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
-              properties.write("changelogFile=liquibase/changelog-root.xml\n")
-              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
-              properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write(
-                  "liquibase.command.changelogParameters.database_name="
-                  + os.environ["SNOWFLAKE_DATABASE"]
+                  "changelogFile="
+                  + str(expanded_dir / "changelog-root.xml")
                   + "\n"
               )
+              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
-
       - name: validate changelog
         run: |
           liquibase \
@@ -171,10 +191,26 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          import shutil
+          from pathlib import Path
           from urllib.parse import urlencode
 
+          source_dir = Path("liquibase")
+          expanded_dir = Path(os.environ["RUNNER_TEMP"]) / "liquibase-expanded"
+          shutil.rmtree(expanded_dir, ignore_errors=True)
+          shutil.copytree(source_dir, expanded_dir)
+
+          database_name = os.environ["SNOWFLAKE_DATABASE"]
+          for path in expanded_dir.rglob("*"):
+              if path.is_file() and path.suffix.lower() in {".xml", ".sql", ".properties"}:
+                  content = path.read_text(encoding="utf-8")
+                  path.write_text(
+                      content.replace("${database_name}", database_name),
+                      encoding="utf-8"
+                  )
+
           params = {
-              "db": os.environ["SNOWFLAKE_DATABASE"],
+              "db": database_name,
               "schema": "trading_use_case",
               "warehouse": os.environ["SNOWFLAKE_WAREHOUSE"],
               "role": os.environ["SNOWFLAKE_ROLE"],
@@ -183,19 +219,23 @@ jobs:
               "workloadIdentityProvider": "OIDC",
               "token": os.environ["SNOWFLAKE_TOKEN"],
           }
-          url = "jdbc:snowflake://" + os.environ["SNOWFLAKE_ACCOUNT"] + ".snowflakecomputing.com/?" + urlencode(params)
+          url = (
+              "jdbc:snowflake://"
+              + os.environ["SNOWFLAKE_ACCOUNT"]
+              + ".snowflakecomputing.com/?"
+              + urlencode(params)
+          )
+
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
-              properties.write("changelogFile=liquibase/changelog-root.xml\n")
-              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
-              properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write(
-                  "liquibase.command.changelogParameters.database_name="
-                  + os.environ["SNOWFLAKE_DATABASE"]
+                  "changelogFile="
+                  + str(expanded_dir / "changelog-root.xml")
                   + "\n"
               )
+              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
-
       - name: deploy liquibase changes
         run: |
           liquibase \
@@ -266,10 +306,26 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          import shutil
+          from pathlib import Path
           from urllib.parse import urlencode
 
+          source_dir = Path("liquibase")
+          expanded_dir = Path(os.environ["RUNNER_TEMP"]) / "liquibase-expanded"
+          shutil.rmtree(expanded_dir, ignore_errors=True)
+          shutil.copytree(source_dir, expanded_dir)
+
+          database_name = os.environ["SNOWFLAKE_DATABASE"]
+          for path in expanded_dir.rglob("*"):
+              if path.is_file() and path.suffix.lower() in {".xml", ".sql", ".properties"}:
+                  content = path.read_text(encoding="utf-8")
+                  path.write_text(
+                      content.replace("${database_name}", database_name),
+                      encoding="utf-8"
+                  )
+
           params = {
-              "db": os.environ["SNOWFLAKE_DATABASE"],
+              "db": database_name,
               "schema": "trading_use_case",
               "warehouse": os.environ["SNOWFLAKE_WAREHOUSE"],
               "role": os.environ["SNOWFLAKE_ROLE"],
@@ -278,19 +334,23 @@ jobs:
               "workloadIdentityProvider": "OIDC",
               "token": os.environ["SNOWFLAKE_TOKEN"],
           }
-          url = "jdbc:snowflake://" + os.environ["SNOWFLAKE_ACCOUNT"] + ".snowflakecomputing.com/?" + urlencode(params)
+          url = (
+              "jdbc:snowflake://"
+              + os.environ["SNOWFLAKE_ACCOUNT"]
+              + ".snowflakecomputing.com/?"
+              + urlencode(params)
+          )
+
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
-              properties.write("changelogFile=liquibase/changelog-root.xml\n")
-              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
-              properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write(
-                  "liquibase.command.changelogParameters.database_name="
-                  + os.environ["SNOWFLAKE_DATABASE"]
+                  "changelogFile="
+                  + str(expanded_dir / "changelog-root.xml")
                   + "\n"
               )
+              properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
+              properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
           PY
-
       - name: deploy liquibase changes
         run: |
           liquibase \
