@@ -9,7 +9,15 @@
         relativeToChangelogFile="true"/>
 
     <include
-        file="objects/trading_use_case/tables/002-add-updated-by.xml"
+        file="objects/trading_use_case/tables/003-add-updated-by.xml"
+        relativeToChangelogFile="true"/>
+
+    <include
+        file="objects/trading_use_case/procedures/004-sp-load-bronze-to-departments.xml"
+        relativeToChangelogFile="true"/>
+
+    <include
+        file="objects/trading_use_case/views/005-vw-departments-silver.xml"
         relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
