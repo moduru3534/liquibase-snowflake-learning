@@ -100,7 +100,7 @@ jobs:
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write(
-                  "liquibase.command.changelogParameters=database_name="
+                  "liquibase.command.changelogParameters.database_name="
                   + os.environ["SNOWFLAKE_DATABASE"]
                   + "\n"
               )
@@ -189,7 +189,7 @@ jobs:
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write(
-                  "liquibase.command.changelogParameters=database_name="
+                  "liquibase.command.changelogParameters.database_name="
                   + os.environ["SNOWFLAKE_DATABASE"]
                   + "\n"
               )
@@ -284,7 +284,7 @@ jobs:
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write(
-                  "liquibase.command.changelogParameters=database_name="
+                  "liquibase.command.changelogParameters.database_name="
                   + os.environ["SNOWFLAKE_DATABASE"]
                   + "\n"
               )
