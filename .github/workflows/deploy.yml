@@ -118,11 +118,8 @@ jobs:
           )
 
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
-              properties.write(
-                  "changelogFile="
-                  + str(expanded_dir / "changelog-root.xml")
-                  + "\n"
-              )
+              properties.write("changelogFile=changelog-root.xml\n")
+              properties.write("searchPath=" + str(expanded_dir) + "\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
@@ -131,6 +128,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
+            --search-path="$RUNNER_TEMP/liquibase-expanded" \
             --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             validate
 
@@ -227,11 +225,8 @@ jobs:
           )
 
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
-              properties.write(
-                  "changelogFile="
-                  + str(expanded_dir / "changelog-root.xml")
-                  + "\n"
-              )
+              properties.write("changelogFile=changelog-root.xml\n")
+              properties.write("searchPath=" + str(expanded_dir) + "\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
@@ -240,6 +235,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
+            --search-path="$RUNNER_TEMP/liquibase-expanded" \
             --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             update
 
@@ -342,11 +338,8 @@ jobs:
           )
 
           with open("liquibase/liquibase.ci.properties", "w", encoding="utf-8") as properties:
-              properties.write(
-                  "changelogFile="
-                  + str(expanded_dir / "changelog-root.xml")
-                  + "\n"
-              )
+              properties.write("changelogFile=changelog-root.xml\n")
+              properties.write("searchPath=" + str(expanded_dir) + "\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
               properties.write("url=" + url + "\n")
@@ -355,6 +348,7 @@ jobs:
         run: |
           liquibase \
             --defaults-file=liquibase/liquibase.ci.properties \
+            --search-path="$RUNNER_TEMP/liquibase-expanded" \
             --classpath="$RUNNER_TEMP/snowflake-jdbc-4.3.2.jar" \
             update
 
