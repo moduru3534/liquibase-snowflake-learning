@@ -99,6 +99,7 @@ jobs:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
+              properties.write("liquibase.command.changelogParameters.database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("url=" + url + "\n")
           PY
 
@@ -183,6 +184,7 @@ jobs:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
+              properties.write("liquibase.command.changelogParameters.database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("url=" + url + "\n")
           PY
 
@@ -273,6 +275,7 @@ jobs:
               properties.write("changelogFile=liquibase/changelog-root.xml\n")
               properties.write("driver=net.snowflake.client.jdbc.SnowflakeDriver\n")
               properties.write("liquibaseSchemaName=trading_use_case\n")
+              properties.write("liquibase.command.changelogParameters.database_name=" + os.environ["SNOWFLAKE_DATABASE"] + "\n")
               properties.write("url=" + url + "\n")
           PY
 
