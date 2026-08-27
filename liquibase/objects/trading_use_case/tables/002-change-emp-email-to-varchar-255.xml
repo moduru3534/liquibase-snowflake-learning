@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="002-change-emp-email-to-varchar-255" author="madhan">
+        <preConditions onFail="HALT" onError="HALT">
+            <tableExists
+                schemaName="trading_use_case"
+                tableName="employee_information_bronze"/>
+            <sqlCheck expectedResult="0"><![CDATA[
+select count(*)
+from trading_use_case.employee_information_bronze
+where length(emp_email) > 255
+            ]]></sqlCheck>
+        </preConditions>
+
+        <sql splitStatements="false" stripComments="false"><![CDATA[
+alter table trading_use_case.employee_information_bronze
+    alter column emp_email set data type varchar(255);
+        ]]></sql>
+
+        <rollback>
+            <sql splitStatements="false" stripComments="false"><![CDATA[
+alter table trading_use_case.employee_information_bronze
+    alter column emp_email set data type varchar(16777216);
+            ]]></sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
